@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
+- R5: real Hunyuan3D worker on Colab; Drive storage backend; GS local workbench integration
+
+## [0.5.0] - 2026-11-22
+
+### Added
+- `pipeforge/pipeline/stage.py` — `Stage` dataclass (key/worker/depends_on/optional) + `validate_graph` construct-time validation (duplicate/unknown/cycle/self-dep rejected; stable Kahn topological order)
+- `pipeforge/pipeline/pipeline.py` — `Pipeline` multi-stage coordinator: never executes workers itself (delegates every stage to the R3 Runner); `plan()` cached topo order; run-time schema-key validation; dependency gating (optional stages may satisfy via SKIPPED); `PipelineReport` outcomes EXECUTED/PARTIAL/FAILED/SKIPPED_ALL + `resumed_from`; failure propagation: retryable→PARTIAL stop, unretryable→FAILED stop, downstream untouched
+- `pipeforge/pipeline/publisher.py` — `Publisher` three-state release protocol (VALIDATED→PUBLISHED; EXECUTED is the pipeline outcome): artifact existence+hash validation, pluggable business quality gate, eight-step safe publish (staging copy + hash recheck + atomic swap + PUBLISHED marker last), idempotent (occupied target rejected, existing versions never damaged), publish failure NEVER touches execution state
+- Upstream artifact references (contract 3): `WorkerContext.upstream(stage_key)` / `artifacts_of()` / `upstream_refs` filled by Runner from checkpoint_data — workers read upstream outputs exclusively through these refs (`UpstreamRef` dataclass)
+- `tests/test_pipeline.py` (11) + `tests/test_publisher.py` (5); `examples/gs_ten_stage_demo.py` — real protocol schema ten stages on the real burner reference: interrupt at stage 7 → resume executes only remaining 3 → publish 10 artifacts → full re-run SKIPPED_ALL → COMPLETED
+
+### Acceptance (R4 task book)
+- R4.1 graph contracts ✅ · R4.2 multi-stage + diamond deps + upstream flow (D content = "D+B+A" proving checkpoint-only references) ✅ · R4.3 resume-skip + fresh-instance resume ✅ · R4.4 Publisher idempotency + execution isolation ✅ · R4.5 suite 61/61 ✅ · R4.6 GS ten-stage mock demo ✅
+
+### Planned
 - R4: multi-stage pipeline orchestration; Publisher; Drive/Cloud storage backends; GS real-worker swap-in
 
 ## [0.4.0] - 2026-11-22
