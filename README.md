@@ -68,6 +68,10 @@ consumers plug in via adapters. First adopter: the Gaming Studio AssetFactory pi
 Current status: **0.1.0** — protocol layer migrated and hardened (7/7 tests). See
 [CHANGELOG.md](CHANGELOG.md) for details.
 
+## 设计任务书
+
+- [R4 多阶段编排架构设计与实施任务书 V1.0](docs/PipeForge_R4_多阶段编排架构设计与实施任务书_V1.0.md) —— Stage/Pipeline/Publisher 四契约、失败传播五分表、R4.1–R4.6 里程碑
+
 ## 开发手册
 
 - [R1–R3 实现进度手册与踩坑修复指南](docs/R1-R3_实现进度手册与踩坑指南.md) —— 职责图、进度总览、16 项踩坑（P01–P16）、开发前检查清单
