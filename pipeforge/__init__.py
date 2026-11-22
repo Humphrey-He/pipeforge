@@ -6,7 +6,7 @@
 版本规则：包版本（框架代码兼容性）与 Task Schema 版本（协议兼容性）独立演进。
 """
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 TASK_SCHEMA_VERSION = "2.0"
 MANIFEST_SCHEMA_VERSION = "2.0"
 
@@ -14,3 +14,4 @@ from . import protocol  # noqa: F401
 from .core import CheckpointManager, QueueScanner, StageOrderError, StateMachine, TaskRepository  # noqa: F401
 from .storage import LocalStorage, Storage  # noqa: F401
 from .workers import Artifact, BaseWorker, WorkerContext, WorkerResult  # noqa: F401
+from .runner import RunReport, Runner  # noqa: F401

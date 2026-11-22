@@ -31,6 +31,16 @@ class TaskRepository:
         self._s.atomic_write_json(rel, task)
         return task
 
+    def save(self, task: dict) -> dict:
+        """Validate + atomically persist the given authoritative task dict.
+        Unlike update(), no re-read from disk: the caller owns the mutation.
+        Runner uses this at persistence points (single atomic write keeps
+        checkpoint + status consistent)."""
+        ok, err = P.validate_task(task)
+        if not ok:
+            raise ValueError("task failed protocol validation: %s" % err)
+        self._s.atomic_write_json(self._rel(task["task_id"]), task)
+        return task
     def get(self, task_id: str) -> Optional[dict]:
         rel = self._rel(task_id)
         return self._s.read_json(rel) if self._s.exists(rel) else None

@@ -28,6 +28,8 @@
 | TaskRepository / StateMachine / CheckpointManager / QueueScanner | ✅ 0.2.0 |
 | BaseWorker / WorkerResult / WorkerContext / Artifact | ✅ 0.3.0 |
 | 通用示例 FileWorker（第二验收场景） | ✅ 0.3.0（examples/） |
+| Runner 执行协调层（状态门控/幂等跳过/失败分类重试/检查点原子持久化） | ✅ 0.4.0 |
+| GS 端到端验收（真实任务全链路演示） | ✅ 0.4.0（GS adapters/gs_e2e_demo.py） |
 
 ## 安装（开发期）
 
@@ -39,7 +41,7 @@ pip install -e ".[test]"  # 含 jsonschema 完整校验
 ## 快速验证
 
 ```bash
-python tests/_run_all.py   # 27 tests, 0 failures（另 GS adapter 8/8）
+python tests/_run_all.py   # 39 tests, 0 failures（另 GS adapter 8/8 + E2E demo）
 ```
 
 ## 版本规则（框架版本 ≠ 协议版本）
@@ -71,5 +73,6 @@ Current status: **0.1.0** — protocol layer migrated and hardened (7/7 tests). 
 - **R0** ✅ 独立仓库 + 协议迁移
 - **R1** ✅ 任务内核：Storage ABC + LocalStorage + Repository/StateMachine/Checkpoint/QueueScanner（22 测试全绿）
 - **R2** ✅ Worker 契约 + FileWorker 第二场景 + GS legacy_job_adapter（27+8 测试全绿；GS 仅新增 adapters/，零改动既有文件）
+- **R3** ✅ Runner 执行协调层 + GS 端到端验收（39/39；真实香炉任务 转换→入库→认领→执行→检查点→幂等→恢复→完结 全链绿）
 - **R1** 任务内核：Storage 接口 → LocalStorage → TaskRepository / StateMachine 薄封装 / CheckpointManager / QueueScanner（tempdir 测试）
 - **R2** Gaming Studio 接入：BaseWorker + 香炉样本真实任务跑通 提交→执行→Checkpoint→恢复→发布

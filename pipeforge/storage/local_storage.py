@@ -34,6 +34,14 @@ class LocalStorage(Storage):
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(data, encoding="utf-8")
 
+    def read_bytes(self, rel: str) -> bytes:
+        return self.resolve(rel).read_bytes()
+
+    def write_bytes(self, rel: str, data: bytes) -> None:
+        p = self.resolve(rel)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(data)
+
     def read_json(self, rel: str) -> Any:
         return P.read_json(self.resolve(rel))
 

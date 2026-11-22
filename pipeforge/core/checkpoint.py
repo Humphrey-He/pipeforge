@@ -35,7 +35,9 @@ class CheckpointManager:
         slot["checkpoint_data"] = ck
         if status == "COMPLETED":
             slot["status"] = "COMPLETED"
-            slot["attempt"] = (slot.get("attempt") or 0) + 1
+            if "attempt" not in slot:
+                # standalone use (no Runner): keep legacy increment behaviour
+                slot["attempt"] = 1
         return ck
 
     def verifies(self, task: dict, stage: str, processor_version: str,

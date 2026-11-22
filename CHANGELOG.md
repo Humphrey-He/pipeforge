@@ -8,7 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- R3: Runner/Scheduler coordination layer; checkpoint integration into worker execution loop
+- R4: multi-stage pipeline orchestration; Publisher; Drive/Cloud storage backends; GS real-worker swap-in
+
+## [0.4.0] - 2026-11-22
+
+### Added
+- `pipeforge/runner/` — `Runner` single-stage execution coordinator: load/validate → status gate (PENDING/RETRY_WAIT/REVIEW→RUNNING, terminal rejected) → idempotent skip via checkpoint verification (stale checkpoint auto-invalidates and re-executes) → validate_input (non-retryable INPUT_INVALID) → execute (worker crash → retryable) → validate_output (non-retryable OUTPUT_INVALID) → checkpoint write + status update in ONE atomic repository write; `RunReport` outcomes (SKIPPED/COMPLETED/RETRY_WAIT/FAILED/REJECTED); `map_error_code` maps worker codes into the task schema enum with `[unmapped:x->y]` tagging (never dropped, never fabricated severity)
+- Retry accounting: attempt increment happens before execute; exhaustion lands task FAILED with full error trail in `errors[]`
+- `complete_task` gating: refuses while any stage slot never executed; RUNNING→COMPLETED only when all stages COMPLETED/SKIPPED
+- `TaskRepository.save()` — validate + atomic persist of an authoritative task dict (caller-owned mutation; the persistence primitive Runner builds on)
+- `Storage.read_bytes/write_bytes` — binary artifact IO (binary-safe workers)
+- `examples/` untouched; Gaming Studio `adapters/gs_e2e_demo.py` — **end-to-end acceptance**: real legacy burner JOB → adapter → protocol Task → real burner reference PNG (hash recomputed) → inbox+READY → QueueScanner claim → Runner + mock inference worker → checkpoint verified → re-run SKIPPED (idempotent) → post-crash resume SKIPPED → complete_task gating → COMPLETED
+
+### Fixed
+- Runner failure paths can fire while task is still PENDING (e.g. input rejection) — now normalized to RUNNING first so the state machine has a legal path to RETRY_WAIT/FAILED
+- CheckpointManager double-incremented attempts when driven by Runner — attempt bookkeeping now owned by Runner alone (legacy standalone increment preserved when slot has no attempt key)
+- Error-code mapping happened at call sites and again inside `_fail`, losing the unmapped tag — mapping is now single-point in `_fail` with explicit tagging
+
+### Acceptance (R3 review checklist)
+- R3.1 normal lifecycle ✅ (demo [4][5]) · R3.2 checkpoint & recovery ✅ ([6][7], 12 runner tests) · R3.3 failure classification & retry ✅ (exhaustion, crash, contract violation, unmapped codes) · R3.4 lifecycle tests ✅ (suite 39/39) · R3.5 GS real-task acceptance ✅ (9-step demo on real files) · R3.6 this release
+- Architecture boundary held: PF knows nothing of GS; GS workers/adapters import PF, never the reverse
+
 
 ## [0.3.0] - 2026-11-22
 
