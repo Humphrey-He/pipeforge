@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
+- R3: Runner/Scheduler coordination layer; checkpoint integration into worker execution loop
+
+## [0.3.0] - 2026-11-22
+
+### Added
+- `pipeforge/workers/base.py` — `BaseWorker` ABC (three-phase: validate_input / execute / validate_output), `WorkerResult` (success/output_key/output_hash/metrics/error_code/error_message + `artifacts` list for multi-output), `WorkerContext` (storage + task_dir + workspace), `Artifact` dataclass. Contract deliberately free of pipeline semantics; workers cannot touch repository/status/publish markers (PF-01..03)
+- `examples/file_worker.py` — second-consumer scenario proving genericity: text transform → verify → hash → generic artifact manifest (own pluggable schema v1.0, NOT the AssetFactory manifest) → validate → eight-step safe publish (staging → checks → atomic swap → PUBLISHED written LAST); double-publish rejected, existing versions never damaged (PF-04..07)
+- `examples/demo_file_pipeline.py` — end-to-end demo (submit → validate → execute → publish)
+- `tests/test_file_worker.py` — 5 tests: input hash mismatch, missing input, manifest correctness, publish-then-no-overwrite, staging preserved on occupied target
+- Gaming Studio `adapters/legacy_job_adapter.py` — pure read-only V1 JOB → V2 Task converter: deterministic asset-id mapping (YL_PRP_000128 → PROP_INCENSE_BURNER_128), stable task-id derivation persisted in sidecar registry (task schema is additionalProperties:false), unknown fields audited not dropped, legacy status never inherited (forced PENDING), .blend sources honestly rejected (schema requires image references — no fabricated fields), originals never modified (GS-01..05)
+- `adapters/tests/test_legacy_job_adapter.py` — 8 tests incl. cross-process determinism probe and real-sample rejection
+
+### Acceptance
+- All 14 review checkpoints (PF-01..07, GS-01..05, INT-01..02) green; PF suite 27/27, GS adapter suite 8/8
+
+### Planned
 - R2: worker layer (`BaseWorker` / `WorkerResult`), Gaming Studio adapter, example file-processing worker, first real asset task end-to-end
 
 ## [0.2.0] - 2026-11-22
