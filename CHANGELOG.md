@@ -8,8 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
-- R1: task kernel — `Storage` interface, `LocalStorage`, `TaskRepository`, `StateMachine` wrapper, `CheckpointManager`, `QueueScanner` (tempdir-tested)
-- R2: Gaming Studio integration — `BaseWorker` / `WorkerResult`, V1 JOB adapter, first real asset task end-to-end
+- R2: worker layer (`BaseWorker` / `WorkerResult`), Gaming Studio adapter, example file-processing worker, first real asset task end-to-end
+
+## [0.2.0] - 2026-11-22
+
+### Added
+- `pipeforge/storage/` — `Storage` ABC (12 methods: exists/read/write/read_json/atomic_write_json/list_dir/mkdir/sha256/move/remove/resolve) + `LocalStorage` implementation; all paths relative, traversal-safe via `protocol.safe_join`
+- `pipeforge/core/task_repository.py` — authoritative records ledger: `submit` (idempotent duplicate rejection) / `update` (read-mutate-validate-atomic-write-back) / `get` / `list`; every persisted record is a protocol-valid document
+- `pipeforge/core/state_machine.py` — thin wrapper over protocol transitions: `can` / `transition` / `assert_stage_order` (raises `StageOrderError`) / `invalidate` (resets downstream stages to empty form)
+- `pipeforge/core/checkpoint.py` — `CheckpointManager`: writes seven-item checkpoint payloads, advances stage status/attempts; `verifies` / `can_skip` delegating to `protocol.stage_valid`
+- `pipeforge/core/queue_scanner.py` — inbox scan & claim: full submission protocol (valid task.json + reference hash match + READY marker) before claiming; claimed tasks moved `inbox/ → tasks/claimed/`; rejected stay in place with reason
+- `tests/test_core.py` — 15 kernel tests on tempdir `LocalStorage` (roundtrips, duplicate/invalid rejection, stage ordering, invalidation, checkpoint tamper/version/config-change detection, scanner happy path + 3 rejection paths + reclaim after record loss)
+
+### Changed
+- Package version 0.1.0 → 0.2.0; `pipeforge/__init__.py` re-exports core + storage
+- Test suite: 7 → 22 (all green)
+
 
 ## [0.1.0] - 2026-11-22
 

@@ -24,7 +24,8 @@
 |---|---|
 | Task / Manifest Schema（draft-07） | ✅ 已迁移 + 双形态 stages（初始空/执行后完整含 checkpoint_data） |
 | protocol.py（ID/状态机/七项检查点/Hash/发布校验） | ✅ 已迁移，7 项测试全过 |
-| TaskRepository / Checkpoint / QueueScanner / Storage 接口 | 🔜 R1 |
+| Storage 接口 + LocalStorage | ✅ 0.2.0 |
+| TaskRepository / StateMachine / CheckpointManager / QueueScanner | ✅ 0.2.0 |
 | BaseWorker / WorkerResult | 🔜 R2 |
 
 ## 安装（开发期）
@@ -37,7 +38,7 @@ pip install -e ".[test]"  # 含 jsonschema 完整校验
 ## 快速验证
 
 ```bash
-python tests/_run_all.py   # 7 tests, 0 failures
+python tests/_run_all.py   # 22 tests, 0 failures
 ```
 
 ## 版本规则（框架版本 ≠ 协议版本）
@@ -66,6 +67,7 @@ Current status: **0.1.0** — protocol layer migrated and hardened (7/7 tests). 
 
 ## 路线
 
-- **R0** ✅ 独立仓库 + 协议迁移（本提交）
+- **R0** ✅ 独立仓库 + 协议迁移
+- **R1** ✅ 任务内核：Storage ABC + LocalStorage + Repository/StateMachine/Checkpoint/QueueScanner（22 测试全绿）
 - **R1** 任务内核：Storage 接口 → LocalStorage → TaskRepository / StateMachine 薄封装 / CheckpointManager / QueueScanner（tempdir 测试）
 - **R2** Gaming Studio 接入：BaseWorker + 香炉样本真实任务跑通 提交→执行→Checkpoint→恢复→发布
