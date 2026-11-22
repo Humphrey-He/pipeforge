@@ -68,6 +68,10 @@ consumers plug in via adapters. First adopter: the Gaming Studio AssetFactory pi
 Current status: **0.1.0** — protocol layer migrated and hardened (7/7 tests). See
 [CHANGELOG.md](CHANGELOG.md) for details.
 
+## 开发手册
+
+- [R1–R3 实现进度手册与踩坑修复指南](docs/R1-R3_实现进度手册与踩坑指南.md) —— 职责图、进度总览、16 项踩坑（P01–P16）、开发前检查清单
+
 ## 路线
 
 - **R0** ✅ 独立仓库 + 协议迁移
