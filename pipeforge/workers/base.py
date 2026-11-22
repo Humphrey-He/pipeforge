@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 from ..storage import Storage
+from .base_types import UpstreamRef
 
 
 @dataclass
@@ -45,9 +46,12 @@ class WorkerResult:
 
 @dataclass
 class WorkerContext:
+    """Execution context: storage + task input dir + scratch workspace +
+    upstream artifact references (filled by the Runner from checkpoints)."""
     storage: Storage
     task_dir: str = ""
     workspace: str = ""
+    upstream_refs: dict = field(default_factory=dict)   # stage_key -> UpstreamRef
     extras: dict = field(default_factory=dict)
 
     def rel_in_task(self, name: str) -> str:
@@ -56,6 +60,19 @@ class WorkerContext:
     def rel_in_workspace(self, name: str) -> str:
         return "%s/%s" % (self.workspace, name) if self.workspace else name
 
+    def upstream(self, stage_key: str) -> UpstreamRef:
+        """Artifact reference of an upstream stage. Raises KeyError when the
+        upstream stage produced no registered artifact — validate_input should
+        turn that into INPUT_INVALID (non-retryable)."""
+        ref = self.upstream_refs.get(stage_key)
+        if ref is None:
+            raise KeyError("no upstream artifact for stage %r" % stage_key)
+        return ref
+
+    def artifacts_of(self, stage_key: str) -> list:
+        """All registered upstream refs (currently one per stage)."""
+        ref = self.upstream_refs.get(stage_key)
+        return [ref] if ref else []
 
 class BaseWorker(ABC):
     """Three-phase worker contract; stateless; no protocol side effects."""

@@ -122,7 +122,9 @@ class Runner:
         self._repo.save(task)
 
         ctx = WorkerContext(self._s, task_dir=self._task_dir(task),
-                            workspace="tasks/work/%s" % tid)
+                            workspace="tasks/work/%s" % tid,
+                            upstream_refs=self._collect_upstream(task, stage_key))
+
 
         # 4. validate_input — rejection is non-retryable by contract
         try:
@@ -232,6 +234,24 @@ class Runner:
 
     # -------------------------------------------------- conventions
 
+    def _collect_upstream(self, task: dict, current_stage: str) -> dict:
+        """Artifact refs of every COMPLETED stage except the current one,
+        taken from checkpoint_data (contract 3: workers read upstream outputs
+        exclusively through these references)."""
+        from ..workers import UpstreamRef
+        out = {}
+        for key, slot in task["stages"].items():
+            if key == current_stage:
+                continue
+            ck = (slot or {}).get("checkpoint_data") or {}
+            op = ck.get("output_path")
+            if (slot or {}).get("status") == "COMPLETED" and op and ck.get("output_hash"):
+                rel = str(op)
+                root = str(self._s.root)
+                if rel.startswith(root):
+                    rel = rel[len(root):].replace(chr(92), "/").lstrip("/")
+                out[key] = UpstreamRef(key, rel, ck["output_hash"])
+        return out
     def _artifacts_from_task(self, task: dict, stage_key: str) -> list:
         """Reconstruct the artifact list from the task's persisted state
         (checkpoint_data output). Single source of truth for reports: works
