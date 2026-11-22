@@ -31,6 +31,12 @@ class QueueScanner:
                 out.append(name)
         return sorted(out)
 
+    def _scan_inbox_detailed(self) -> list:
+        """All inbox dirs; classification happens in intake_once so callers
+        can see WHY something was not claimed (missing task.json / missing READY)."""
+        if not self._s.exists(self._inbox):
+            return []
+        return sorted(self._s.list_dir(self._inbox))
     def _verify_references(self, task: dict, dir_rel: str) -> Optional[str]:
         for ref in (task.get("source", {}).get("reference") or []):
             rel = "%s/%s" % (dir_rel, ref.get("path", ""))
@@ -43,9 +49,17 @@ class QueueScanner:
 
     def intake_once(self) -> dict:
         """执行一轮认领。返回 {claimed: [...], rejected: [{dir, reason}]}。"""
-        report = {"claimed": [], "rejected": []}
-        for tid in self.scan_inbox():
+        report = {"claimed": [], "rejected": [], "incomplete": []}
+        for tid in self._scan_inbox_detailed():
             d = "%s/%s" % (self._inbox, tid)
+            if not (self._s.exists(d + "/task.json") and self._s.exists(d + "/READY")):
+                missing = []
+                if not self._s.exists(d + "/task.json"):
+                    missing.append("task.json")
+                if not self._s.exists(d + "/READY"):
+                    missing.append("READY")
+                report["incomplete"].append({"dir": tid, "missing": missing})
+                continue
             try:
                 task = self._s.read_json(d + "/task.json")
             except Exception as e:

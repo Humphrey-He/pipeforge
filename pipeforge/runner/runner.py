@@ -102,7 +102,8 @@ class Runner:
                                   input_rel=self._input_rel(task),
                                   output_rel=self._output_rel(slot)):
                 return RunReport(tid, stage_key, "SKIPPED", attempts=slot.get("attempt", 0),
-                                 skipped=True)
+                                 skipped=True,
+                                 artifacts=self._artifacts_from_task(task, stage_key))
             # checkpoint stale (config/processor/output changed) -> re-run below
             StateMachine.invalidate(task, stage_key)
 
@@ -161,8 +162,18 @@ class Runner:
         _apply(task)
         self._repo.save(task)
         slot = self._stage_slot(task, stage_key)
+        final_arts = self._artifacts_from_task(task, stage_key)
+        if result.artifacts and final_arts:
+            if final_arts[0].sha256 != result.artifacts[0].sha256 or \
+               final_arts[0].path_rel != result.artifacts[0].path_rel:
+                return self._fail(task, stage_key, "OUTPUT_INVALID",
+                                  "checkpoint/task artifact mismatch: persisted %r vs worker %r" % (
+                                      (final_arts[0].path_rel, final_arts[0].sha256[:8]),
+                                      (result.artifacts[0].path_rel, result.artifacts[0].sha256[:8])),
+                                  retryable=False)
         return RunReport(tid, stage_key, "COMPLETED", attempts=slot.get("attempt", 1),
-                         artifacts=result.artifacts, metrics=result.metrics)
+                         artifacts=final_arts or result.artifacts,
+                         metrics=result.metrics)
 
     # -------------------------------------------------- failure path
 
@@ -221,6 +232,17 @@ class Runner:
 
     # -------------------------------------------------- conventions
 
+    def _artifacts_from_task(self, task: dict, stage_key: str) -> list:
+        """Reconstruct the artifact list from the task's persisted state
+        (checkpoint_data output). Single source of truth for reports: works
+        identically on first completion, idempotent skip, and crash resume."""
+        slot = self._stage_slot(task, stage_key)
+        ck = slot.get("checkpoint_data") or {}
+        out_rel = self._output_rel(slot)
+        if not out_rel or not ck.get("output_hash"):
+            return []
+        from ..workers import Artifact
+        return [Artifact(key="output", path_rel=out_rel, sha256=ck["output_hash"])]
     def _task_dir(self, task: dict) -> str:
         tid = task["task_id"]
         for cand in ("tasks/claimed/%s" % tid, "inbox/%s" % tid):
