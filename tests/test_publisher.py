@@ -1,4 +1,4 @@
-"""R4.4 Publisher tests: three-state protocol, idempotency, isolation
+"""R4.4 Publisher tests: three-state protocol, immutable releases, isolation
 of publish failures from execution state."""
 import copy
 import json
@@ -69,7 +69,7 @@ def test_publisher_validate_custom_gate():
     td.cleanup()
 
 
-def test_publisher_publish_idempotent():
+def test_publisher_publish_immutable():
     td, st, _ = _fresh()
     arts = _artifacts(st, 2)
     pub = Publisher(st)

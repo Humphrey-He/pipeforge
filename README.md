@@ -32,7 +32,7 @@
 | Runner 执行协调层（状态门控/幂等跳过/失败分类重试/检查点原子持久化） | ✅ 0.4.0 |
 | GS 端到端验收（真实任务全链路演示） | ✅ 0.4.0（GS adapters/gs_e2e_demo.py） |
 | Pipeline 多阶段编排（依赖图/拓扑序/中断恢复/上游引用） | ✅ 0.5.0 |
-| Publisher 三态发布（VALIDATED→PUBLISHED/幂等/与执行隔离） | ✅ 0.5.0 |
+| Publisher 三态发布（VALIDATED→PUBLISHED/不可变版本/与执行隔离） | ✅ 0.5.0 |
 | GS 十阶段 Mock Demo | ✅ 0.5.0（examples/gs_ten_stage_demo.py） |
 
 ## 整体架构
@@ -97,7 +97,7 @@ flowchart TB
                       → REMOTE_COMPLETED → FETCHING → LOCAL_VERIFIED（唯一完成点）
 ⑤ 检查点      每阶段七项检查点 + 状态，单次原子写（崩溃即重入，不半写）
 ⑥ 发布        全阶段 COMPLETED/SKIPPED ──► Publisher：VALIDATED（逐件 Hash 复核）
-                → PUBLISHED（staging 原子交换，PUBLISHED 标记最后写，幂等可重发）
+                → PUBLISHED（staging 原子交换，PUBLISHED 标记最后写，失败重试安全无残留；版本不可变，新内容另发新号）
 ⑦ 交付        library/<asset>/<version>/ + PUBLISHED ──► 游戏工程（Godot）消费
 
 恢复语义：任意一步崩溃，重启走同一条链——COMPLETED 阶段幂等跳过（零重执行）；
