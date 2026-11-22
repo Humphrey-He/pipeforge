@@ -1,3 +1,8 @@
+[![Python](https://img.shields.io/badge/python-%E2%89%A53.10-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.1.0-green)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/tests-7%2F7-brightgreen)](tests/_run_all.py)
+
 # PipeForge
 
 > 面向 AI 生成与数据处理场景的**可恢复生产管线框架**：统一任务协议、阶段状态管理、
@@ -47,6 +52,17 @@ python tests/_run_all.py   # 7 tests, 0 failures
 
 `D:\Gaming Studio\AssetFactory`（3D 美术资产生产）——通过 Adapter 接入，
 Profile 与 Blender Worker 保留业务侧。
+
+## English Summary
+
+**PipeForge** is a recoverable production-pipeline framework for AI generation and data
+processing workloads. It provides a unified task protocol, staged state management,
+checkpoint-based resumption, a worker execution interface, quality gates, and artifact
+publishing. It is deliberately business-agnostic: no 3D/Blender/Godot/game concepts live here;
+consumers plug in via adapters. First adopter: the Gaming Studio AssetFactory pipeline.
+
+Current status: **0.1.0** — protocol layer migrated and hardened (7/7 tests). See
+[CHANGELOG.md](CHANGELOG.md) for details.
 
 ## 路线
 
