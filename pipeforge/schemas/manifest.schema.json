@@ -1,0 +1,295 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "assetfactory://protocol/manifest.schema.json",
+  "title": "AssetFactory Manifest",
+  "description": "AssetFactory V2 统一协议规范 V1.0 - Manifest Schema (schema_version 2.0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "asset_id",
+    "asset_version",
+    "task_id",
+    "project_id",
+    "category",
+    "profile",
+    "pipeline",
+    "geometry",
+    "quality",
+    "delivery",
+    "created_at",
+    "published_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "2.0"
+    },
+    "asset_id": {
+      "type": "string",
+      "pattern": "^(PROP|FURN|CHAR|ENV|DECOR|VFX|UI)_[A-Z0-9_]+_[0-9]{3,}$"
+    },
+    "asset_version": {
+      "type": "string",
+      "pattern": "^v[0-9]{3,}$"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^TASK_[0-9]{8}_[0-9]{3,}$"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "PROP",
+        "FURN",
+        "CHAR",
+        "ENV",
+        "DECOR",
+        "VFX",
+        "UI"
+      ]
+    },
+    "profile": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "pipeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "blender_version": {
+          "type": "string"
+        }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mesh_count",
+        "vertices",
+        "faces"
+      ],
+      "properties": {
+        "mesh_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "vertices": {
+          "type": "integer"
+        },
+        "faces": {
+          "type": "integer"
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "meter",
+            "centimeter"
+          ]
+        }
+      }
+    },
+    "textures": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "resolution": {
+          "type": "integer",
+          "enum": [
+            512,
+            1024,
+            2048,
+            4096
+          ]
+        },
+        "maps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "path",
+              "format",
+              "sha256"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "albedo",
+                  "normal",
+                  "ao",
+                  "roughness",
+                  "metallic",
+                  "emission"
+                ]
+              },
+              "path": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string",
+                "enum": [
+                  "PNG",
+                  "JPEG",
+                  "WEBP",
+                  "KTX2"
+                ]
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "path",
+          "sha256",
+          "size_bytes"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "raw",
+              "clean",
+              "baked",
+              "preview",
+              "final_render",
+              "report",
+              "source"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "WARNING",
+            "REVIEW",
+            "FAIL"
+          ]
+        },
+        "report": {
+          "type": "string"
+        },
+        "checks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "WARNING",
+              "FAIL",
+              "SKIPPED"
+            ]
+          }
+        }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "engine",
+        "format",
+        "target"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "PUBLISHED",
+            "PENDING",
+            "BLOCKED"
+          ]
+        },
+        "engine": {
+          "type": "string",
+          "enum": [
+            "godot",
+            "unity",
+            "none"
+          ]
+        },
+        "format": {
+          "type": "string",
+          "enum": [
+            "glb",
+            "gltf",
+            "fbx",
+            "png"
+          ]
+        },
+        "target": {
+          "type": "string"
+        }
+      }
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "published_at": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pipeforge"
+version = "0.1.0"
+description = "Recoverable production pipeline framework for AI generation and data processing"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+jsonschema = ["jsonschema>=4.0"]
+test = ["jsonschema>=4.0"]
+
+[tool.setuptools]
+packages = ["pipeforge"]
+
+[tool.setuptools.package-data]
+pipeforge = ["schemas/*.json", "schemas/examples/*.json"]

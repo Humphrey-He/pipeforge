@@ -1,0 +1,890 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "assetfactory://protocol/task.schema.json",
+  "title": "AssetFactory Task",
+  "description": "AssetFactory V2 统一协议规范 V1.0 - Task Schema (schema_version 2.0)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "task_id",
+    "asset_id",
+    "project_id",
+    "pipeline",
+    "profile",
+    "priority",
+    "status",
+    "source",
+    "config",
+    "stages",
+    "retry",
+    "outputs",
+    "errors",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "2.0"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^TASK_[0-9]{8}_[0-9]{3,}$",
+      "description": "TASK_{YYYYMMDD}_{SEQUENCE}"
+    },
+    "asset_id": {
+      "type": "string",
+      "pattern": "^(PROP|FURN|CHAR|ENV|DECOR|VFX|UI)_[A-Z0-9_]+_[0-9]{3,}$"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pipeline": {
+      "type": "string",
+      "enum": [
+        "image_to_3d",
+        "model_3d",
+        "bake_only",
+        "render_only",
+        "pixel_2d"
+      ]
+    },
+    "profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9,
+      "default": 5
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "RUNNING",
+        "RETRY_WAIT",
+        "REVIEW",
+        "COMPLETED",
+        "FAILED",
+        "CANCELLED"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "reference"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "image",
+            "multi_image"
+          ]
+        },
+        "reference": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256",
+              "width",
+              "height",
+              "role"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^[^:]*$",
+                "description": "相对任务输入目录，禁止绝对路径与盘符",
+                "not": {
+                  "enum": [
+                    "D:/x"
+                  ]
+                }
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "description": "不带 sha256: 前缀的十六进制"
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "primary",
+                  "auxiliary"
+                ]
+              }
+            }
+          }
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "negative_prompt": {
+          "type": "string"
+        },
+        "generation": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "integer",
+              "number",
+              "boolean"
+            ]
+          },
+          "properties": {
+            "engine": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
+            },
+            "model_version": {
+              "type": "string"
+            },
+            "seed": {
+              "type": "integer"
+            },
+            "width": {
+              "type": "integer"
+            },
+            "height": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "engine",
+            "model",
+            "seed"
+          ]
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model"
+      ],
+      "properties": {
+        "model": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "inference": {
+          "type": "object",
+          "properties": {
+            "resolution": {
+              "type": "integer",
+              "enum": [
+                256,
+                512,
+                768,
+                1024
+              ]
+            },
+            "num_inference_steps": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "octree_resolution": {
+              "type": "integer"
+            },
+            "seed": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        },
+        "clean": {
+          "type": "object",
+          "properties": {
+            "profile": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "bake": {
+          "type": "object",
+          "properties": {
+            "texture_resolution": {
+              "type": "integer",
+              "enum": [
+                512,
+                1024,
+                2048,
+                4096
+              ]
+            },
+            "maps": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "albedo",
+                  "normal",
+                  "ao",
+                  "roughness",
+                  "metallic",
+                  "emission"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "render": {
+          "type": "object",
+          "properties": {
+            "preview": {
+              "type": "boolean"
+            },
+            "final_render": {
+              "type": "boolean"
+            },
+            "samples": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "export": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "type": "string",
+              "enum": [
+                "glb",
+                "gltf",
+                "fbx",
+                "png"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "stages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inference",
+        "validate_raw",
+        "clean",
+        "validate_clean",
+        "uv",
+        "bake",
+        "render",
+        "quality",
+        "manifest",
+        "publish"
+      ],
+      "properties": {
+        "inference": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {},
+              "maxProperties": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "RUNNING",
+                    "COMPLETED",
+                    "RETRY_WAIT",
+                    "FAILED",
+                    "SKIPPED"
+                  ]
+                },
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "checkpoint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "checkpoint_data": {
+                  "type": "object",
+                  "description": "七项检查点负载（协议 §6.2），结构由 stage_valid() 语义校验：status/processor_version/input_path/input_hash/config_hash/output_path/output_hash",
+                  "additionalProperties": true
+                }
+              }
+            }
+          ]
+        },
+        "validate_raw": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {},
+              "maxProperties": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "RUNNING",
+                    "COMPLETED",
+                    "RETRY_WAIT",
+                    "FAILED",
+                    "SKIPPED"
+                  ]
+                },
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "checkpoint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "checkpoint_data": {
+                  "type": "object",
+                  "description": "七项检查点负载（协议 §6.2），结构由 stage_valid() 语义校验：status/processor_version/input_path/input_hash/config_hash/output_path/output_hash",
+                  "additionalProperties": true
+                }
+              }
+            }
+          ]
+        },
+        "clean": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {},
+              "maxProperties": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "RUNNING",
+                    "COMPLETED",
+                    "RETRY_WAIT",
+                    "FAILED",
+                    "SKIPPED"
+                  ]
+                },
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "checkpoint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "checkpoint_data": {
+                  "type": "object",
+                  "description": "七项检查点负载（协议 §6.2），结构由 stage_valid() 语义校验：status/processor_version/input_path/input_hash/config_hash/output_path/output_hash",
+                  "additionalProperties": true
+                }
+              }
+            }
+          ]
+        },
+        "validate_clean": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {},
+              "maxProperties": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "RUNNING",
+                    "COMPLETED",
+                    "RETRY_WAIT",
+                    "FAILED",
+                    "SKIPPED"
+                  ]
+                },
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "checkpoint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "checkpoint_data": {
+                  "type": "object",
+                  "description": "七项检查点负载（协议 §6.2），结构由 stage_valid() 语义校验：status/processor_version/input_path/input_hash/config_hash/output_path/output_hash",
+                  "additionalProperties": true
+                }
+              }
+            }
+          ]
+        },
+        "uv": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {},
+              "maxProperties": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "RUNNING",
+                    "COMPLETED",
+                    "RETRY_WAIT",
+                    "FAILED",
+                    "SKIPPED"
+                  ]
+                },
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "checkpoint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "checkpoint_data": {
+                  "type": "object",
+                  "description": "七项检查点负载（协议 §6.2），结构由 stage_valid() 语义校验：status/processor_version/input_path/input_hash/config_hash/output_path/output_hash",
+                  "additionalProperties": true
+                }
+              }
+            }
+          ]
+        },
+        "bake": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {},
+              "maxProperties": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "RUNNING",
+                    "COMPLETED",
+                    "RETRY_WAIT",
+                    "FAILED",
+                    "SKIPPED"
+                  ]
+                },
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "checkpoint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "checkpoint_data": {
+                  "type": "object",
+                  "description": "七项检查点负载（协议 §6.2），结构由 stage_valid() 语义校验：status/processor_version/input_path/input_hash/config_hash/output_path/output_hash",
+                  "additionalProperties": true
+                }
+              }
+            }
+          ]
+        },
+        "render": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {},
+              "maxProperties": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "RUNNING",
+                    "COMPLETED",
+                    "RETRY_WAIT",
+                    "FAILED",
+                    "SKIPPED"
+                  ]
+                },
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "checkpoint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "checkpoint_data": {
+                  "type": "object",
+                  "description": "七项检查点负载（协议 §6.2），结构由 stage_valid() 语义校验：status/processor_version/input_path/input_hash/config_hash/output_path/output_hash",
+                  "additionalProperties": true
+                }
+              }
+            }
+          ]
+        },
+        "quality": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {},
+              "maxProperties": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "RUNNING",
+                    "COMPLETED",
+                    "RETRY_WAIT",
+                    "FAILED",
+                    "SKIPPED"
+                  ]
+                },
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "checkpoint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "checkpoint_data": {
+                  "type": "object",
+                  "description": "七项检查点负载（协议 §6.2），结构由 stage_valid() 语义校验：status/processor_version/input_path/input_hash/config_hash/output_path/output_hash",
+                  "additionalProperties": true
+                }
+              }
+            }
+          ]
+        },
+        "manifest": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {},
+              "maxProperties": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "RUNNING",
+                    "COMPLETED",
+                    "RETRY_WAIT",
+                    "FAILED",
+                    "SKIPPED"
+                  ]
+                },
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "checkpoint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "checkpoint_data": {
+                  "type": "object",
+                  "description": "七项检查点负载（协议 §6.2），结构由 stage_valid() 语义校验：status/processor_version/input_path/input_hash/config_hash/output_path/output_hash",
+                  "additionalProperties": true
+                }
+              }
+            }
+          ]
+        },
+        "publish": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {},
+              "maxProperties": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "RUNNING",
+                    "COMPLETED",
+                    "RETRY_WAIT",
+                    "FAILED",
+                    "SKIPPED"
+                  ]
+                },
+                "attempt": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "checkpoint": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "checkpoint_data": {
+                  "type": "object",
+                  "description": "七项检查点负载（协议 §6.2），结构由 stage_valid() 语义校验：status/processor_version/input_path/input_hash/config_hash/output_path/output_hash",
+                  "additionalProperties": true
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "retry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_attempts",
+        "current_attempt"
+      ],
+      "properties": {
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "current_attempt": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "stage",
+          "message",
+          "retryable",
+          "attempt",
+          "timestamp"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "INPUT_INVALID",
+              "SCHEMA_INVALID",
+              "INPUT_HASH_MISMATCH",
+              "NETWORK_TIMEOUT",
+              "GPU_OOM",
+              "MODEL_LOAD_FAILED",
+              "BLENDER_PROCESS_FAILED",
+              "OUTPUT_INVALID",
+              "QUALITY_REJECTED",
+              "PUBLISH_FAILED",
+              "DRIVE_SYNC_FAILED"
+            ]
+          },
+          "stage": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "attempt": {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "updated_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    }
+  }
+}
